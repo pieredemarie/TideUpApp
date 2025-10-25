@@ -5,6 +5,7 @@ import (
 	"TideUp/internal/models"
 	"TideUp/internal/storage"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,7 +15,7 @@ type Handler struct {
 }
 
 func (h *Handler) AddTask(c *gin.Context) {
-	var req dto.CreateTaskRequest
+	var req dto.TaskRequest
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest,gin.H{"error": "bad request"})
 		return
@@ -38,7 +39,7 @@ func (h *Handler) AddTask(c *gin.Context) {
 }
 
 func (h *Handler) RemoveTask(c* gin.Context) {
-	var req dto.DeleteTaskRequest
+	var req dto.TaskIDRequest
 	
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest,gin.H{"error": "bad request"})
@@ -71,3 +72,42 @@ func (h *Handler) ShowAllTasks(c *gin.Context) {
 	c.JSON(http.StatusOK,resp)
 } 
 
+func (h *Handler) UpdateTask(c *gin.Context) {
+	idStr := c.Param("id") 
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad URL input"})
+		return
+	}
+
+    var req dto.UpdateTasRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+        return
+    }
+
+    err = h.Storage.UpdateTask(id, req)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+        return
+    }
+
+    c.Status(http.StatusOK)
+}
+
+func (h *Handler) MakeTaskFloat(c *gin.Context) {
+	var req dto.TaskIDRequest
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+		return
+	}
+
+	err := h.Storage.MakeTaskFloat(req.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}

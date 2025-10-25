@@ -1,6 +1,9 @@
 package storage
 
-import "TideUp/internal/models"
+import (
+	"TideUp/internal/dto"
+	"TideUp/internal/models"
+)
 
 type TaskStorage interface {
 	AddTask(newTask *models.Task) error
@@ -9,7 +12,6 @@ type TaskStorage interface {
 	ShowAllTasks(limit int) ([]models.Task, error)
 	MakeTaskFloat(taskID int) error
 }
-
 
 func (s *Storage) AddTask(newTask *models.Task) error {
 	err := s.db.Create(newTask).Error
@@ -29,12 +31,19 @@ func (s *Storage) ShowAllTasks(limit int) ([]models.Task, error) {
 	return tasks,err
 }
 
-func (s *Storage) UpdateTask(taskID int, newTask *models.Task) error {
-	return s.db.Model(&models.Task{}).
-	Where("id = ?", taskID).
-	Updates(newTask).Error
+func (s *Storage) UpdateTask(taskID int, req dto.UpdateTasRequest) error {
+	updates := make(map[string]interface{})
+    if req.Name != nil { updates["name"] = *req.Name }
+    if req.Desc != nil { updates["desc"] = *req.Desc }
+    if req.ContextID != nil { updates["context_id"] = *req.ContextID }
+    if req.Deadline != nil { updates["deadline"] = *req.Deadline } else { updates["deadline"] = nil }
+    if req.Completed != nil { updates["completed"] = *req.Completed }
+
+    return s.db.Model(&models.Task{}).Where("id = ?", taskID).Updates(updates).Error
 }
 
 func (s *Storage) MakeTaskFloat(taskID int) error {
-	return nil
+	return s.db.Model(&models.Task{}).
+	Where("id = ?", taskID). 
+	Update("completed",false).Error
 }
