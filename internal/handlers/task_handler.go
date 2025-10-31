@@ -10,11 +10,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Handler struct {
+type TaskHandler struct {
 	Storage storage.Storage
 }
 
-func (h *Handler) AddTask(c *gin.Context) {
+func NewTaskHandler(st storage.Storage) *TaskHandler {
+	return &TaskHandler{
+		Storage: st,
+	}
+}
+
+func (h *TaskHandler) AddTask(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusUnauthorized,gin.H{"error": "user not found"})
+		return
+	}
+
 	var req dto.TaskRequest
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest,gin.H{"error": "bad request"})
@@ -22,6 +34,7 @@ func (h *Handler) AddTask(c *gin.Context) {
 	}
 
 	task := models.Task{
+		UserID: userID.(int),
 		Name: req.Name,
 		Desc: req.Desc,
 		ContextID: req.ContextID,
@@ -35,18 +48,25 @@ func (h *Handler) AddTask(c *gin.Context) {
 		return
 	}
 	
-	c.JSON(http.StatusOK,gin.H{"response" : "task created"})
+	c.JSON(http.StatusOK,task)
 }
 
-func (h *Handler) RemoveTask(c* gin.Context) {
-	var req dto.TaskIDRequest
-	
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest,gin.H{"error": "bad request"})
+func (h *TaskHandler) RemoveTask(c* gin.Context) {
+	idStr := c.Param("id") 
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad URL input"})
 		return
 	}
 
-	err := h.Storage.RemoveTask(req.ID)
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusUnauthorized,gin.H{"error": "user not found"})
+		return
+	}
+
+
+	err = h.Storage.RemoveTask(userID.(int),id)
 	if err !=  nil {
 		c.JSON(http.StatusInternalServerError,gin.H{"error": "server error"})
 		return
@@ -55,15 +75,22 @@ func (h *Handler) RemoveTask(c* gin.Context) {
 	c.JSON(http.StatusOK,gin.H{"responce":"task successfully removed"})
 }
 
-func (h *Handler) ShowAllTasks(c *gin.Context) {
+func (h *TaskHandler) ShowAllTasks(c *gin.Context) {
 	var req dto.ShowAllTasks
+
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusUnauthorized,gin.H{"error": "user not found"})
+		return
+	}
+
 
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest,gin.H{"error": "bad request"})
 		return
 	}
 
-	resp, err := h.Storage.ShowAllTasks(req.Limit)
+	resp, err := h.Storage.ShowAllTasks(userID.(int), req.Limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError,gin.H{"error": "server error"})
 		return
@@ -72,7 +99,7 @@ func (h *Handler) ShowAllTasks(c *gin.Context) {
 	c.JSON(http.StatusOK,resp)
 } 
 
-func (h *Handler) UpdateTask(c *gin.Context) {
+func (h *TaskHandler) UpdateTask(c *gin.Context) {
 	idStr := c.Param("id") 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -80,34 +107,23 @@ func (h *Handler) UpdateTask(c *gin.Context) {
 		return
 	}
 
-    var req dto.UpdateTasRequest
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusUnauthorized,gin.H{"error": "user not found"})
+		return
+	}
+
+    var req dto.UpdateTaskRequest
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
         return
     }
 
-    err = h.Storage.UpdateTask(id, req)
+    err = h.Storage.UpdateTask(userID.(int),id, req)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
         return
     }
 
     c.Status(http.StatusOK)
-}
-
-func (h *Handler) MakeTaskFloat(c *gin.Context) {
-	var req dto.TaskIDRequest
-
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
-		return
-	}
-
-	err := h.Storage.MakeTaskFloat(req.ID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
-		return
-	}
-
-	c.Status(http.StatusOK)
 }

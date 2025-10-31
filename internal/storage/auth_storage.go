@@ -5,12 +5,12 @@ import (
 )
 
 type IAuth interface {
-	CreateUser(newUser models.User) error 
+	CreateUser(newUser *models.User) error 
 	GetUserByEmail(email string) (*models.User,error)
 	GetUserPassword(email string) (string, error)
 }
 
-func (s *Storage) CreateUser(newUser models.User) error  {
+func (s *Storage) CreateUser(newUser *models.User) error  {
 	return s.db.Create(newUser).Error
 }
 

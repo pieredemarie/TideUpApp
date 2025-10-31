@@ -35,7 +35,7 @@ func (s *AuthService) Register(email,name,password string) error {
 		PasswordHash: string(hash),
 	}
 
-	return s.Storage.CreateUser(*user)
+	return s.Storage.CreateUser(user)
 } 
 
 func (s *AuthService) Login(email,password string) (string, error)  {

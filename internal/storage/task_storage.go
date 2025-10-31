@@ -7,9 +7,9 @@ import (
 
 type TaskStorage interface {
 	AddTask(newTask *models.Task) error
-	RemoveTask(taskID int) error 
-	UpdateTask(taskID int, newTask *models.Task) error
-	ShowAllTasks(limit int) ([]models.Task, error)
+	RemoveTask(userID,taskID int) error 
+	UpdateTask(userID, taskID int, req dto.UpdateTaskRequest) error
+	ShowAllTasks(userID,limit int) ([]models.Task, error)
 	MakeTaskFloat(taskID int) error
 }
 
@@ -18,20 +18,20 @@ func (s *Storage) AddTask(newTask *models.Task) error {
 	return err
 }
 
-func (s *Storage) RemoveTask(taskID int) error {
+func (s *Storage) RemoveTask(userID, taskID int) error {
 	err := s.db.
-	Where("id = ?",taskID).
+	Where("id = ? AND user_id = ?",taskID,userID).
 	Delete(&models.Task{}).Error
 	return err
 }
 
-func (s *Storage) ShowAllTasks(limit int) ([]models.Task, error) {
+func (s *Storage) ShowAllTasks(userID,limit int) ([]models.Task, error) {
 	var tasks []models.Task
-	err := s.db.Limit(limit).Find(&tasks).Error
+	err := s.db.Where("user_id = ?", userID).Limit(limit).Find(&tasks).Error
 	return tasks,err
 }
 
-func (s *Storage) UpdateTask(taskID int, req dto.UpdateTasRequest) error {
+func (s *Storage) UpdateTask(userID, taskID int, req dto.UpdateTaskRequest) error {
 	updates := make(map[string]interface{})
     if req.Name != nil { updates["name"] = *req.Name }
     if req.Desc != nil { updates["desc"] = *req.Desc }
@@ -39,7 +39,7 @@ func (s *Storage) UpdateTask(taskID int, req dto.UpdateTasRequest) error {
     if req.Deadline != nil { updates["deadline"] = *req.Deadline } else { updates["deadline"] = nil }
     if req.Completed != nil { updates["completed"] = *req.Completed }
 
-    return s.db.Model(&models.Task{}).Where("id = ?", taskID).Updates(updates).Error
+    return s.db.Model(&models.Task{}).Where("id = ? AND user_id = ?", taskID, userID).Updates(updates).Error
 }
 
 func (s *Storage) MakeTaskFloat(taskID int) error {

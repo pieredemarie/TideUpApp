@@ -9,16 +9,12 @@ type TaskRequest struct {
 	Deadline  *time.Time `json:"deadline"`
 }
 
-type UpdateTasRequest struct {
+type UpdateTaskRequest struct {
 	Name      *string     `json:"name" binding:"required"`
 	Desc      *string     `json:"desc"`
 	ContextID *int       `json:"context_id"`
 	Deadline  *time.Time `json:"deadline"`
 	Completed *bool `json:"completed"`
-}
-
-type TaskIDRequest struct {
-	ID int `json:"id"`
 }
 
 type ShowAllTasks struct {

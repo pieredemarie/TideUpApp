@@ -21,6 +21,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		tokenStr = strings.TrimSpace(tokenStr)
+		
 		userID, err := ValidateToken(tokenStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error":"invalid or expired token"})
