@@ -1,9 +1,9 @@
 package auth
 
 import (
+	"TideUp/internal/apperror"
 	"TideUp/internal/models"
 	"TideUp/internal/storage"
-	"errors"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -21,7 +21,7 @@ func NewAuthService(storage storage.IAuth) *AuthService {
 func (s *AuthService) Register(email,name,password string) error {
 	_, err := s.Storage.GetUserByEmail(email)
 	if err == nil {
-		return errors.New("email already exists")
+		return apperror.ErrEmailExists
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
@@ -41,17 +41,17 @@ func (s *AuthService) Register(email,name,password string) error {
 func (s *AuthService) Login(email,password string) (string, error)  {
 	user, err := s.Storage.GetUserByEmail(email)
 	if err != nil {
-		return "", errors.New("invalid password or email")
+		return "", apperror.ErrBadCredentials
 	} 	
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash),[]byte(password))
 	if err != nil {
-		return "", errors.New("invalid password or email")
+		return "", apperror.ErrBadCredentials
 	}
 
 	token, err := GenerateToken(user.ID)
 	if err != nil {
-		return "", errors.New("couldn't generate token")
+		return "", apperror.ErrToken
 	}
 	
 	return token, nil

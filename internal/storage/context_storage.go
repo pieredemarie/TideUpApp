@@ -8,7 +8,7 @@ import (
 type ContextStorage interface {
 	CreateContext(newContext *models.Context) error
 	DeleteContext(userID,contextID int) error 
-	EditContext(userID,contextID int,newContext models.Context) error 
+	EditContext(userID,contextID int,newContext dto.UpdateContextRequest) error 
 	ShowAllContexts(userID, limit int) ([]models.Context, error) 
 }
 

@@ -3,7 +3,7 @@ package handlers
 import (
 	"TideUp/internal/dto"
 	"TideUp/internal/models"
-	"TideUp/internal/storage"
+	"TideUp/internal/services/context"
 	"net/http"
 	"strconv"
 
@@ -11,12 +11,12 @@ import (
 )
 
 type ContextHandler struct {
-	Storage storage.Storage
+	ContextService context.ContextService
 }
 
-func NewContextHandler(st storage.Storage) *ContextHandler {
+func NewContextHandler(ContextService *context.ContextService) *ContextHandler {
 	return &ContextHandler{
-		Storage: st,
+		ContextService: *ContextService,
 	}
 }
 
@@ -41,7 +41,7 @@ func (h *ContextHandler) AddContext(c *gin.Context) {
 		IsHidden: false,
 	}
 
-	err := h.Storage.CreateContext(&context)
+	err := h.ContextService.Storage.CreateContext(&context)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error" : "server error"})
 		return
@@ -64,7 +64,7 @@ func (h *ContextHandler) DeleteContext(c *gin.Context) {
 		return
 	}
 
-	err = h.Storage.DeleteContext(userID.(int),id)
+	err = h.ContextService.Storage.DeleteContext(userID.(int),id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error" : "server error"})
 		return
@@ -86,7 +86,7 @@ func (h *ContextHandler) ShowAllContexts(c *gin.Context) {
 		return
 	}
 	
-	contexts, err := h.Storage.ShowAllContexts(userID.(int),limit)
+	contexts, err := h.ContextService.Storage.ShowAllContexts(userID.(int),limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error" : "server error"})
 		return
@@ -115,7 +115,7 @@ func (h *ContextHandler) EditContext(c *gin.Context) {
 		return
 	}
 
-	err = h.Storage.EditContext(userID.(int),id,req)
+	err = h.ContextService.Storage.EditContext(userID.(int),id,req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error" : "server error"})
 		return

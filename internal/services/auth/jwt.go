@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"errors"
+	"TideUp/internal/apperror"
 	"log"
 	"os"
 	"time"
@@ -47,11 +47,11 @@ func ValidateToken(tokenStr string) (int, error) {
 	})
 
 	if err != nil {
-		return 0, errors.New("invalid token")
+		return 0, apperror.ErrInvalidToken
 	}
 
 	if !token.Valid {
-		return 0, errors.New("invalid token")
+		return 0, apperror.ErrInvalidToken
 	}
 
 	return claims.UserID, nil

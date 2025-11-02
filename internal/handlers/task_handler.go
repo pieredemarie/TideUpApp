@@ -3,7 +3,7 @@ package handlers
 import (
 	"TideUp/internal/dto"
 	"TideUp/internal/models"
-	"TideUp/internal/storage"
+	"TideUp/internal/services/task"
 	"net/http"
 	"strconv"
 
@@ -11,13 +11,11 @@ import (
 )
 
 type TaskHandler struct {
-	Storage storage.Storage
+	TaskService *task.TaskService
 }
 
-func NewTaskHandler(st storage.Storage) *TaskHandler {
-	return &TaskHandler{
-		Storage: st,
-	}
+func NewTaskHandler(taskService *task.TaskService) *TaskHandler {
+	return &TaskHandler{TaskService: taskService}
 }
 
 func (h *TaskHandler) AddTask(c *gin.Context) {
@@ -42,7 +40,7 @@ func (h *TaskHandler) AddTask(c *gin.Context) {
 		Completed: false,
 	}
 
-	err := h.Storage.AddTask(&task)
+	err := h.TaskService.Storage.AddTask(&task)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
@@ -66,7 +64,7 @@ func (h *TaskHandler) RemoveTask(c* gin.Context) {
 	}
 
 
-	err = h.Storage.RemoveTask(userID.(int),id)
+	err = h.TaskService.Storage.RemoveTask(userID.(int),id)
 	if err !=  nil {
 		c.JSON(http.StatusInternalServerError,gin.H{"error": "server error"})
 		return
@@ -90,7 +88,7 @@ func (h *TaskHandler) ShowAllTasks(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.Storage.ShowAllTasks(userID.(int), req.Limit)
+	resp, err := h.TaskService.Storage.ShowAllTasks(userID.(int), req.Limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError,gin.H{"error": "server error"})
 		return
@@ -119,11 +117,14 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
         return
     }
 
-    err = h.Storage.UpdateTask(userID.(int),id, req)
+    err = h.TaskService.Storage.UpdateTask(userID.(int),id, req)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
         return
     }
 
     c.Status(http.StatusOK)
+}
+
+func (h *TaskHandler) GetEbbTasks(c *gin.Context) {
 }

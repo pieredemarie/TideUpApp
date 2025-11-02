@@ -3,6 +3,8 @@ package main
 import (
 	"TideUp/internal/handlers"
 	"TideUp/internal/services/auth"
+	"TideUp/internal/services/context"
+	"TideUp/internal/services/task"
 	"TideUp/internal/storage"
 	"fmt"
 	"log"
@@ -52,9 +54,13 @@ func main() {
 	godotenv.Load()
 	db := connectDB()
 	storage := storage.NewStorage(db)
+	
 	authService := auth.NewAuthService(storage)
-	taskHandler := handlers.NewTaskHandler(*storage)        
-	contextHandler := handlers.NewContextHandler(*storage)  
+	taskService := task.NewTaskService(storage)
+	contextService := context.NewContextService(storage)
+
+	taskHandler := handlers.NewTaskHandler(taskService)        
+	contextHandler := handlers.NewContextHandler(contextService)
 	r := gin.Default()
 	registerRoutes(r,authService,taskHandler,contextHandler)
 	r.Run(":8080")

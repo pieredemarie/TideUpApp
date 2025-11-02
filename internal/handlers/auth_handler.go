@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"TideUp/internal/apperror"
 	"TideUp/internal/dto"
 	"TideUp/internal/services/auth"
 	"net/http"
@@ -45,7 +46,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	token, err := h.authService.Login(req.Email,req.Password)
 	if err != nil {
-		if err.Error() == "invalid password or email" {
+		if err == apperror.ErrBadCredentials {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password or email"})
 		}  else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "login failed"})
