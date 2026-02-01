@@ -14,9 +14,9 @@ type ContextHandler struct {
 	ContextService context.ContextService
 }
 
-func NewContextHandler(ContextService *context.ContextService) *ContextHandler {
+func NewContextHandler(ContextService context.ContextService) *ContextHandler {
 	return &ContextHandler{
-		ContextService: *ContextService,
+		ContextService: ContextService,
 	}
 }
 
@@ -41,7 +41,7 @@ func (h *ContextHandler) AddContext(c *gin.Context) {
 		IsHidden: false,
 	}
 
-	err := h.ContextService.Storage.CreateContext(&context)
+	err := h.ContextService.Create(&context)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
 		return
@@ -64,7 +64,7 @@ func (h *ContextHandler) DeleteContext(c *gin.Context) {
 		return
 	}
 
-	err = h.ContextService.Storage.DeleteContext(userID.(int), id)
+	err = h.ContextService.Delete(userID.(int), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
 		return
@@ -86,7 +86,7 @@ func (h *ContextHandler) ShowAllContexts(c *gin.Context) {
 		return
 	}
 
-	contexts, err := h.ContextService.Storage.ShowAllContexts(userID.(int), limit)
+	contexts, err := h.ContextService.ShowAll(userID.(int), limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
 		return
@@ -115,7 +115,7 @@ func (h *ContextHandler) EditContext(c *gin.Context) {
 		return
 	}
 
-	err = h.ContextService.Storage.EditContext(userID.(int), id, req)
+	err = h.ContextService.Edit(userID.(int), id, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
 		return
