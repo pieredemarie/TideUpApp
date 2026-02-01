@@ -8,22 +8,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthService struct {
+type authService struct {
 	Storage storage.IAuth
 }
 
-type IAuthService interface {
+type AuthService interface {
 	Register(email, name, password string) error
 	Login(email, password string) (string, error)
 }
 
-func NewAuthService(storage storage.IAuth) *AuthService {
-	return &AuthService{
+func NewAuthService(storage storage.IAuth) *authService {
+	return &authService{
 		Storage: storage,
 	}
 }
 
-func (s *AuthService) Register(email, name, password string) error {
+func (s *authService) Register(email, name, password string) error {
 	_, err := s.Storage.GetUserByEmail(email)
 	if err == nil {
 		return apperror.ErrEmailExists
@@ -43,7 +43,7 @@ func (s *AuthService) Register(email, name, password string) error {
 	return s.Storage.CreateUser(user)
 }
 
-func (s *AuthService) Login(email, password string) (string, error) {
+func (s *authService) Login(email, password string) (string, error) {
 	user, err := s.Storage.GetUserByEmail(email)
 	if err != nil {
 		return "", apperror.ErrBadCredentials
