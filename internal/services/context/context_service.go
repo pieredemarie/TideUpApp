@@ -1,6 +1,7 @@
 package context
 
 import (
+	"TideUp/internal/apperror"
 	"TideUp/internal/dto"
 	"TideUp/internal/models"
 	"TideUp/internal/storage"
@@ -28,6 +29,15 @@ func (s *contextService) Create(newContext *models.Context) error {
 }
 
 func (s *contextService) Delete(userID, contextID int) error {
+	count, err := s.Storage.CountTasksInContext(userID, contextID)
+	if err != nil {
+		return err
+	}
+
+	if count > 0 {
+		return apperror.ErrContextNotEmpty
+	}
+
 	return s.Storage.DeleteContext(userID, contextID)
 }
 
