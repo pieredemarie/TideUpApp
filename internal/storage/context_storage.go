@@ -7,9 +7,10 @@ import (
 
 type ContextStorage interface {
 	CreateContext(newContext *models.Context) error
-	DeleteContext(userID,contextID int) error 
-	EditContext(userID,contextID int,newContext dto.UpdateContextRequest) error 
-	ShowAllContexts(userID, limit int) ([]models.Context, error) 
+	DeleteContext(userID, contextID int) error
+	EditContext(userID, contextID int, newContext dto.UpdateContextRequest) error
+	ShowAllContexts(userID, limit int) ([]models.Context, error)
+	CountTasksInContext(userID, contextID int) (int64, error)
 }
 
 func (s *Storage) CreateContext(newContext *models.Context) error {
@@ -17,19 +18,24 @@ func (s *Storage) CreateContext(newContext *models.Context) error {
 	return err
 }
 
-func (s *Storage) DeleteContext(userID,contextID int) error {
+func (s *Storage) DeleteContext(userID, contextID int) error {
 	return s.db.Where("id = ? AND user_id = ?", contextID, userID).Delete(&models.Context{}).Error
 }
 
-func (s *Storage) ShowAllContexts(userID,limit int) ([]models.Context,error) {
+func (s *Storage) ShowAllContexts(userID, limit int) ([]models.Context, error) {
 	var allContexts []models.Context
-	err := s.db.Where("user_id = ?",userID).Limit(limit).Find(&allContexts).Error
-	return allContexts,err
+	err := s.db.Where("user_id = ?", userID).Limit(limit).Find(&allContexts).Error
+	return allContexts, err
 }
 
-func (s *Storage) EditContext(userID,contextID int,newContext dto.UpdateContextRequest) error {
+func (s *Storage) EditContext(userID, contextID int, newContext dto.UpdateContextRequest) error {
 	return s.db.Model(models.Context{}).
-	Where("id = ? AND user_id = ?", contextID, userID).
-	Updates(newContext).Error
+		Where("id = ? AND user_id = ?", contextID, userID).
+		Updates(newContext).Error
 }
 
+func (s *Storage) CountTasksInContext(userID, contextID int) (int64, error) {
+	var count int64
+	err := s.db.Model(&models.Task{}).Where("user_id = ? AND context_id = ?", userID, contextID).Count(&count).Error
+	return count, err
+}
