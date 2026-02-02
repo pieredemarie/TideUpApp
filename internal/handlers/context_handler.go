@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"TideUp/internal/apperror"
 	"TideUp/internal/dto"
 	"TideUp/internal/models"
 	"TideUp/internal/services/context"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -66,6 +68,10 @@ func (h *ContextHandler) DeleteContext(c *gin.Context) {
 
 	err = h.ContextService.Delete(userID.(int), id)
 	if err != nil {
+		if errors.Is(apperror.ErrContextNotEmpty, err) {
+			c.JSON(http.StatusConflict, gin.H{"error": "context not empty"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "server error"})
 		return
 	}
